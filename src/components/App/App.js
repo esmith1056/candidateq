@@ -1,7 +1,7 @@
 import "./App.css";
 import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
-import Info from "./routes/info";
-import List from "./routes/list";
+import Info from "../../routes/info";
+import List from "../../routes/list";
 
 function App() {
   return (
