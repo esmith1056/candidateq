@@ -44,7 +44,7 @@ const Info = () => {
   };
 
   const handleCommentChange = (event) => {
-    if (event.target?.value && event.target.value !== comment) {
+    if (event.target?.value !== comment) {
       setComment(event.target.value);
     }
   };
