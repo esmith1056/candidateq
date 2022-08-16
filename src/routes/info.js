@@ -10,7 +10,7 @@ const Info = () => {
   const [status, setStatus] = useState(null);
   const [comment, setComment] = useState("");
   const { id } = useParams();
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (id && !data && !error) {
