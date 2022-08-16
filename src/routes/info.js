@@ -10,7 +10,7 @@ const Info = () => {
   const [status, setStatus] = useState(null);
   const [comment, setComment] = useState("");
   const { id } = useParams();
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (id && !data && !error) {
@@ -44,7 +44,7 @@ const Info = () => {
   };
 
   const handleCommentChange = (event) => {
-    if (event.target?.value && event.target.value !== comment) {
+    if (event.target?.value !== comment) {
       setComment(event.target.value);
     }
   };
@@ -61,10 +61,9 @@ const Info = () => {
         setData(results[0]);
       } else {
         setError(res);
-        console.log(res);
       }
     } catch (e) {
-      console.log(e);
+      setError('Big time fetch error')
     }
     setFetching(false);
   };

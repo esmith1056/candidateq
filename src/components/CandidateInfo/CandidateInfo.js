@@ -1,3 +1,5 @@
+const formatID = (name, value) => (name && value ) ? `${name}::${value}` : 'N/A';
+
 const CandidateInfo = ({ data }) => {
   return (
     <div className="CandidateInfo">
@@ -69,7 +71,7 @@ const CandidateInfo = ({ data }) => {
           <tr>
             <th scope="row">ID</th>
             <td>
-              {data.id?.name} : {data.id?.value}
+              {formatID(data.id?.name, data.id?.value)}
             </td>
           </tr>
         </tbody>
