@@ -61,10 +61,9 @@ const Info = () => {
         setData(results[0]);
       } else {
         setError(res);
-        console.log(res);
       }
     } catch (e) {
-      console.log(e);
+      setError('Big time fetch error')
     }
     setFetching(false);
   };
