@@ -16,11 +16,15 @@ const Info = () => {
   useEffect(() => {
     if (id && !data && !error) {
       setFetching(true);
-      const data = JSON.parse(localStorage.getItem(id));
-      setLocked(true);
-      setStatus(data.status);
-      setComment(data.comment);
-      setData(data);
+      try {
+        const data = JSON.parse(localStorage.getItem(id));
+        setLocked(true);
+        setStatus(data.status);
+        setComment(data.comment);
+        setData(data);
+      } catch (e) {
+        setError('Candidate not found')
+      }
       setFetching(false);
     }
   }, [id, data, error]);
@@ -62,7 +66,7 @@ const Info = () => {
         const { results } = await res.json();
         setData(results[0]);
       } else {
-        setError(res);
+        setError(`Fetch error status ${res.status}`);
       }
     } catch (e) {
       setError('Big time fetch error')
@@ -77,7 +81,7 @@ const Info = () => {
         <div>Click the button to query a new candidate!</div>
       )}
       {data && !isFetching && <CandidateInfo data={data} />}
-      {error && !isFetching && <div>Error</div>}
+      {error && !isFetching && <div className="error">Error: {error}</div>}
       {data && (
         <div className="ReviewControls">
           <fieldset disabled={locked}>
