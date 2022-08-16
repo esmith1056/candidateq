@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CandidateInfo from "../components/CandidateInfo/CandidateInfo";
+import { digestMessage } from "../utils";
 
 const Info = () => {
   const [locked, setLocked] = useState(false);
@@ -34,10 +35,11 @@ const Info = () => {
     navigate("/info", { replace: true });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setLocked(true);
     const updatedData = { ...data, status, comment };
-    const key = `${data.name?.last},${data.name?.first},${data.dob?.date}`;
+    const hash = await digestMessage(`${data.name?.last}${data.name?.first}${data.dob?.date}`);
+    const key = hash.substring(0,20);
     localStorage.setItem(key, JSON.stringify(updatedData));
     setData(updatedData);
     navigate(`/info/${key}`, { replace: true });
