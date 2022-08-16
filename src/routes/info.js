@@ -40,12 +40,17 @@ const Info = () => {
   };
 
   const handleSave = async () => {
-    setLocked(true);
     const updatedData = { ...data, status, comment };
-    const hash = await digestMessage(`${data.name?.last}${data.name?.first}${data.dob?.date}`);
-    const key = hash.substring(0,20);
+    let key = id;
+    if (!key) {
+      const hash = await digestMessage(`${data.name?.last}${data.name?.first}${data.dob?.date}`);
+      key = hash.substring(0,20);
+    }
+
     localStorage.setItem(key, JSON.stringify(updatedData));
     setData(updatedData);
+    setLocked(true);
+
     navigate(`/info/${key}`, { replace: true });
   };
 
