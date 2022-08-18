@@ -1,4 +1,6 @@
-# Erik Smith Take Home
+# CandidateQueue
+
+This was originally a skills test I didn't do so well on because all of my code-snippets belonged to my current employer, so I couldn't use them. I'm now building this out into a little practice app to apply new ideas, techniques, and create my own code-snippets. When life hands you lemons, make lemon sandwiches!
 
 ## Prequisites
 
@@ -10,9 +12,10 @@
 
 1. Clone the repo at https://github.com/esmith1056/candidateq.
 2. From project directory, run `yarn`.
-3. Start dev server with `yarn start`.
-4. Your default browser should automatically open to https://localhost:3000.
-5. The dev server uses a self-signed SSL cert. You will receive a privacy error. Click on the browser's advanced options and choose to proceed anyway.
+3. Start dev server with `yarn dev`.
+4. The [mkcert](https://github.com/liuweiGL/vite-plugin-mkcert) plugin will attempt to install SSL certs to support HTTPS. You may be asked for your password a times while the certs are installed.
+5. Navigate to https://127.0.0.1:5173/.
+6. If you receive an HTTPS privacy error, click on the browser's advanced options and choose to proceed anyway.
 
 ### Quick installation on macOS or Linux
 
