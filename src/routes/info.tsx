@@ -1,14 +1,27 @@
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  Button,
+  TextArea,
+  ControlGroup,
+  RadioGroup,
+  Radio,
+  Spinner,
+} from "@blueprintjs/core";
+
 import CandidateInfo from "../components/CandidateInfo/CandidateInfo";
-import { digestMessage } from "../utils";
+import { ICandidateInfo } from "../components/CandidateInfo/Types";
+
+import { digestMessage, getRandomInt } from "../utils";
+import "./info.css";
 
 const Info = (): JSX.Element => {
   const [locked, setLocked] = useState(false);
   const [isFetching, setFetching] = useState(false);
+  const [isSaving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<Record<string, any> | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const [data, setData] = useState<ICandidateInfo | null>(null);
+  const [status, setStatus] = useState<string | undefined>();
   const [comment, setComment] = useState("");
   const { id } = useParams();
   const navigate = useNavigate();
@@ -35,39 +48,48 @@ const Info = (): JSX.Element => {
   const resetUI = () => {
     setLocked(false);
     setComment("");
-    setStatus(null);
+    setStatus(undefined);
     setData(null);
     setError(null);
     setFetching(false);
     navigate("/info", { replace: true });
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!data) {
       setError("No data to save");
       return;
     }
 
-    const updatedData = { ...data, status, comment };
-    let key = id;
-    if (!key) {
-      const hash = await digestMessage(
-        `${data.name?.last}${data.name?.first}${data.dob?.date}`
-      );
-      key = hash.substring(0, 20);
-    }
-
-    localStorage.setItem(key, JSON.stringify(updatedData));
-    setData(updatedData);
-    setLocked(true);
-
-    navigate(`/info/${key}`, { replace: true });
+    setSaving(true);
+    const timeout = getRandomInt(100, 3500); // Give the illusion of latency
+    console.log(timeout);
+    setTimeout(async () => {
+      const updatedData = { ...data, status, comment };
+      let key = id;
+      if (!key) {
+        const hash = await digestMessage(
+          `${data.name?.last}${data.name?.first}${data.dob?.date}`
+        );
+        key = hash.substring(0, 20);
+      }
+      localStorage.setItem(key, JSON.stringify(updatedData));
+      setData(updatedData);
+      setSaving(false);
+      setLocked(true);
+      navigate(`/info/${key}`, { replace: true });
+    }, timeout);
   };
 
   const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     if (event.target?.value !== comment) {
       setComment(event.target.value);
     }
+  };
+
+  const handleStatusChange = (event: FormEvent<HTMLInputElement>) => {
+    const value = (event.target as HTMLInputElement)?.value;
+    setStatus(value);
   };
 
   const handleGetNewCandidate = async () => {
@@ -91,61 +113,79 @@ const Info = (): JSX.Element => {
 
   return (
     <>
-      {isFetching && <div className="loading">LOADING...</div>}
+      {isFetching && (
+        <div className="LoadingOverlay">
+          <Spinner />
+        </div>
+      )}
       {!data && !isFetching && !error && (
         <div>Click the button to query a new candidate!</div>
       )}
       {data && !isFetching && <CandidateInfo data={data} />}
       {error && !isFetching && <div className="error">Error: {error}</div>}
-      {data && (
-        <div className="ReviewControls">
-          <fieldset disabled={locked}>
-            <label htmlFor="Approve">
-              <input
-                type="radio"
-                name="status"
-                value="Approve"
-                checked={status === "Approve"}
-                onChange={() => setStatus("Approve")}
-              />
-              Approve
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="status"
-                value="Reject"
-                checked={status === "Reject"}
-                onChange={() => setStatus("Reject")}
-              />
-              Reject
-            </label>
-          </fieldset>
-          <textarea
-            placeholder="Leave a comment here, if desired..."
-            onChange={handleCommentChange}
-            value={comment}
-            disabled={locked}
-          ></textarea>
-          {!locked ? (
-            <button
-              className="SaveButton"
-              onClick={() => handleSave()}
-              disabled={status === null}
+      <div className="ReviewControls">
+        {data ? (
+          <>
+            <RadioGroup
+              inline={true}
+              onChange={handleStatusChange}
+              selectedValue={status}
+              disabled={locked}
             >
-              Save
-            </button>
-          ) : (
-            <button className="EditButton" onClick={() => setLocked(false)}>
-              Edit
-            </button>
-          )}
-        </div>
-      )}
-
-      <button className="NewCandidateButton" onClick={handleGetNewCandidate}>
-        New Candidate
-      </button>
+              <Radio label="Approve" value="Approve" />
+              <Radio label="Decline" value="Decline" />
+            </RadioGroup>
+            <TextArea
+              placeholder="Leave a comment here, if desired..."
+              fill={true}
+              onChange={handleCommentChange}
+              value={comment}
+              disabled={locked}
+            ></TextArea>
+            <ControlGroup className="InfoControlGroup">
+              <Button
+                disabled={!locked}
+                intent={locked ? "primary" : undefined}
+                className="NewCandidateButton"
+                icon="refresh"
+                onClick={handleGetNewCandidate}
+              >
+                New Candidate
+              </Button>
+              {!locked ? (
+                <>
+                  <Button
+                    intent="primary"
+                    icon={isSaving ? "lock" : "saved"}
+                    className="SaveButton"
+                    onClick={() => handleSave()}
+                    disabled={!status}
+                  >
+                    {isSaving ? "Saving..." : "Save"}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  icon="lock"
+                  className="EditButton"
+                  onClick={() => setLocked(false)}
+                >
+                  Unlock
+                </Button>
+              )}
+            </ControlGroup>
+          </>
+        ) : (
+          <Button
+            intent="primary"
+            className="NewCandidateButton"
+            icon="refresh"
+            onClick={handleGetNewCandidate}
+          >
+            New Candidate
+          </Button>
+        )}
+      </div>
     </>
   );
 };
