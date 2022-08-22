@@ -1,6 +1,9 @@
-const formatID = (name, value) => (name && value ) ? `${name}::${value}` : 'N/A';
+import { ICandidateInfo } from "./Types";
 
-const CandidateInfo = ({ data }) => {
+const formatID = (name?: string, value?: string) =>
+  name && value ? `${name}::${value}` : "N/A";
+
+const CandidateInfo = ({ data }: { data: ICandidateInfo }): JSX.Element => {
   return (
     <div className="CandidateInfo">
       <div className="CandidatePhoto">
@@ -70,9 +73,7 @@ const CandidateInfo = ({ data }) => {
           </tr>
           <tr>
             <th scope="row">ID</th>
-            <td>
-              {formatID(data.id?.name, data.id?.value)}
-            </td>
+            <td>{formatID(data.id?.name, data.id?.value)}</td>
           </tr>
         </tbody>
       </table>
