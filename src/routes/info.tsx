@@ -1,13 +1,16 @@
 import { useState, useEffect, ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CandidateInfo from "../components/CandidateInfo/CandidateInfo";
+import { ICandidateInfo } from "../components/CandidateInfo/Types";
+import { Button, TextArea } from "@blueprintjs/core";
+
 import { digestMessage } from "../utils";
 
 const Info = (): JSX.Element => {
   const [locked, setLocked] = useState(false);
   const [isFetching, setFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<Record<string, any> | null>(null);
+  const [data, setData] = useState<ICandidateInfo | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [comment, setComment] = useState("");
   const { id } = useParams();
@@ -121,31 +124,37 @@ const Info = (): JSX.Element => {
               Reject
             </label>
           </fieldset>
-          <textarea
+          <TextArea
             placeholder="Leave a comment here, if desired..."
+            fill={true}
             onChange={handleCommentChange}
             value={comment}
             disabled={locked}
-          ></textarea>
+          ></TextArea>
           {!locked ? (
-            <button
+            <Button
               className="SaveButton"
               onClick={() => handleSave()}
               disabled={status === null}
             >
               Save
-            </button>
+            </Button>
           ) : (
-            <button className="EditButton" onClick={() => setLocked(false)}>
+            <Button className="EditButton" onClick={() => setLocked(false)}>
               Edit
-            </button>
+            </Button>
           )}
         </div>
       )}
 
-      <button className="NewCandidateButton" onClick={handleGetNewCandidate}>
+      <Button
+        intent="primary"
+        className="NewCandidateButton"
+        icon="refresh"
+        onClick={handleGetNewCandidate}
+      >
         New Candidate
-      </button>
+      </Button>
     </>
   );
 };
