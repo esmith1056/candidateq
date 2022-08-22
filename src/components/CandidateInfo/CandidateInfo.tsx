@@ -1,11 +1,9 @@
+import { ICandidateInfo } from "./Types";
+
 const formatID = (name?: string, value?: string) =>
   name && value ? `${name}::${value}` : "N/A";
 
-const CandidateInfo = ({
-  data,
-}: {
-  data: Record<string, any>;
-}): JSX.Element => {
+const CandidateInfo = ({ data }: { data: ICandidateInfo }): JSX.Element => {
   return (
     <div className="CandidateInfo">
       <div className="CandidatePhoto">
