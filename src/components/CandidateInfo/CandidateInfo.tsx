@@ -1,4 +1,5 @@
 import { ICandidateInfo } from "./Types";
+import "./CandidateInfo.css";
 
 const formatID = (name?: string, value?: string) =>
   name && value ? `${name}::${value}` : "N/A";

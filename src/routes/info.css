@@ -1,0 +1,11 @@
+fieldset {
+}
+.SaveButton.bp4-button,
+.EditButton.bp4-button {
+  background: red;
+  min-width: 12em;
+}
+
+.InfoControlGroup {
+  margin: 1rem 0;
+}

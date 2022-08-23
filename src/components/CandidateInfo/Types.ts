@@ -6,7 +6,6 @@ export interface ICandidateInfo {
     title: string;
     first: string;
     last: string;
-    gender: string;
   };
   dob: {
     age: number;
@@ -14,16 +13,16 @@ export interface ICandidateInfo {
   };
   location: {
     street: {
-      number: string;
+      number: number;
       name: string;
     };
     city: string;
     state: string;
     country: string;
-    postcode: string;
+    postcode: number;
     timezone: {
       description: string;
-      offset: number;
+      offset: string;
     };
   };
   email: string;

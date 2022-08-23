@@ -1,21 +1,14 @@
-import "./App.css";
 import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
-import Info from "./routes/info";
-import List from "./routes/list";
+import Info from "../../routes/info";
+import List from "../../routes/list";
+import MainMenu from "../MainMenu";
+import "./App.css";
 
 const App = (): JSX.Element => {
   return (
-    <div className="App">
+    <main className="App">
       <BrowserRouter>
-        <menu className="MainMenu">
-          <li>
-            <Link to="/info">Candidate Info</Link>
-          </li>
-          <li>
-            <Link to="/list">List of Previous Candidates</Link>
-          </li>
-        </menu>
-
+        <MainMenu />
         <Routes>
           <Route path="info/:id" element={<Info />} />
           <Route path="info" element={<Info />} />
@@ -23,7 +16,7 @@ const App = (): JSX.Element => {
           <Route path="" element={<Navigate to="/info" />} />
         </Routes>
       </BrowserRouter>
-    </div>
+    </main>
   );
 };
 
