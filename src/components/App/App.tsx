@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
-import Info from "../../routes/info";
+import Info from "../../routes/Info/Info";
 import List from "../../routes/list";
 import MainMenu from "../MainMenu";
 import "./App.css";
