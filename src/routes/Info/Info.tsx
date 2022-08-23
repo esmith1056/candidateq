@@ -1,5 +1,7 @@
 import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import axios, { AxiosResponse } from "axios";
+
 import {
   Button,
   TextArea,
@@ -9,10 +11,10 @@ import {
   Spinner,
 } from "@blueprintjs/core";
 
-import CandidateInfo from "../components/CandidateInfo/CandidateInfo";
-import { ICandidateInfo } from "../components/CandidateInfo/Types";
+import CandidateInfo from "../../components/CandidateInfo/CandidateInfo";
+import { ICandidateInfo } from "../../components/CandidateInfo/Types";
 
-import { digestMessage, getRandomInt } from "../utils";
+import { digestMessage, getRandomInt } from "../../utils";
 import "./info.css";
 
 const Info = (): JSX.Element => {
@@ -93,22 +95,19 @@ const Info = (): JSX.Element => {
   };
 
   const handleGetNewCandidate = async () => {
-    const url = "https://randomuser.me/api/?exc=login";
     resetUI();
     setFetching(true);
-
-    try {
-      const res = await fetch(url);
-      if (res.ok) {
-        const { results } = await res.json();
-        setData(results[0]);
-      } else {
-        setError(`Fetch error status ${res.status}`);
-      }
-    } catch (e) {
-      setError("Big time fetch error");
-    }
-    setFetching(false);
+    axios
+      .get("https://randomuser.me/api/", {
+        params: {
+          exc: "login",
+        },
+      })
+      .then((response: AxiosResponse) => {
+        setData(response.data.results[0]);
+      })
+      .catch((e) => setError(e.message))
+      .then(() => setFetching(false));
   };
 
   return (
