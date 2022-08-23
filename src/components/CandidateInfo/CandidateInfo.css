@@ -1,0 +1,13 @@
+.CandidateDetails {
+    max-width: 100%;
+    margin: 1rem 0;
+}
+.CandidateDetails th {
+    text-align: left;
+    width: 128px;
+    padding: .25rem;
+}
+
+.CandidateDetails tr {
+    background: aliceblue;
+}

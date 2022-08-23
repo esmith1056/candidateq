@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
-import Info from "../routes/info";
-import List from "../routes/list";
-import MainMenu from "./MainMenu";
+import Info from "../../routes/info";
+import List from "../../routes/list";
+import MainMenu from "../MainMenu";
+import "./App.css";
 
 const App = (): JSX.Element => {
   return (
-    <div className="App">
+    <main className="App">
       <BrowserRouter>
         <MainMenu />
         <Routes>
@@ -15,7 +16,7 @@ const App = (): JSX.Element => {
           <Route path="" element={<Navigate to="/info" />} />
         </Routes>
       </BrowserRouter>
-    </div>
+    </main>
   );
 };
 

@@ -2,13 +2,15 @@ import { useState, useEffect, ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import CandidateInfo from "../components/CandidateInfo/CandidateInfo";
 import { ICandidateInfo } from "../components/CandidateInfo/Types";
-import { Button, TextArea } from "@blueprintjs/core";
+import { Button, TextArea, ControlGroup, Spinner } from "@blueprintjs/core";
 
 import { digestMessage } from "../utils";
+import "./info.css";
 
 const Info = (): JSX.Element => {
   const [locked, setLocked] = useState(false);
   const [isFetching, setFetching] = useState(false);
+  const [isSaving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ICandidateInfo | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -45,26 +47,28 @@ const Info = (): JSX.Element => {
     navigate("/info", { replace: true });
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!data) {
       setError("No data to save");
       return;
     }
+    setSaving(true);
 
-    const updatedData = { ...data, status, comment };
-    let key = id;
-    if (!key) {
-      const hash = await digestMessage(
-        `${data.name?.last}${data.name?.first}${data.dob?.date}`
-      );
-      key = hash.substring(0, 20);
-    }
-
-    localStorage.setItem(key, JSON.stringify(updatedData));
-    setData(updatedData);
-    setLocked(true);
-
-    navigate(`/info/${key}`, { replace: true });
+    setTimeout(async () => {
+      const updatedData = { ...data, status, comment };
+      let key = id;
+      if (!key) {
+        const hash = await digestMessage(
+          `${data.name?.last}${data.name?.first}${data.dob?.date}`
+        );
+        key = hash.substring(0, 20);
+      }
+      localStorage.setItem(key, JSON.stringify(updatedData));
+      setData(updatedData);
+      setSaving(false);
+      setLocked(true);
+      navigate(`/info/${key}`, { replace: true });
+    }, 2000);
   };
 
   const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -100,61 +104,80 @@ const Info = (): JSX.Element => {
       )}
       {data && !isFetching && <CandidateInfo data={data} />}
       {error && !isFetching && <div className="error">Error: {error}</div>}
-      {data && (
-        <div className="ReviewControls">
-          <fieldset disabled={locked}>
-            <label htmlFor="Approve">
-              <input
-                type="radio"
-                name="status"
-                value="Approve"
-                checked={status === "Approve"}
-                onChange={() => setStatus("Approve")}
-              />
-              Approve
-            </label>
-            <label>
-              <input
-                type="radio"
-                name="status"
-                value="Reject"
-                checked={status === "Reject"}
-                onChange={() => setStatus("Reject")}
-              />
-              Reject
-            </label>
-          </fieldset>
-          <TextArea
-            placeholder="Leave a comment here, if desired..."
-            fill={true}
-            onChange={handleCommentChange}
-            value={comment}
-            disabled={locked}
-          ></TextArea>
-          {!locked ? (
-            <Button
-              className="SaveButton"
-              onClick={() => handleSave()}
-              disabled={status === null}
-            >
-              Save
-            </Button>
-          ) : (
-            <Button className="EditButton" onClick={() => setLocked(false)}>
-              Edit
-            </Button>
-          )}
-        </div>
-      )}
-
-      <Button
-        intent="primary"
-        className="NewCandidateButton"
-        icon="refresh"
-        onClick={handleGetNewCandidate}
-      >
-        New Candidate
-      </Button>
+      <div className="ReviewControls">
+        {data ? (
+          <>
+            <TextArea
+              placeholder="Leave a comment here, if desired..."
+              fill={true}
+              onChange={handleCommentChange}
+              value={comment}
+              disabled={locked}
+            ></TextArea>
+            <ControlGroup className="InfoControlGroup">
+              <Button
+                className="NewCandidateButton"
+                icon="refresh"
+                onClick={handleGetNewCandidate}
+              >
+                New Candidate
+              </Button>
+              <fieldset disabled={locked}>
+                <label htmlFor="Approve">
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Approve"
+                    checked={status === "Approve"}
+                    onChange={() => setStatus("Approve")}
+                  />
+                  Approve
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="status"
+                    value="Reject"
+                    checked={status === "Reject"}
+                    onChange={() => setStatus("Reject")}
+                  />
+                  Reject
+                </label>
+              </fieldset>
+              {!locked ? (
+                <>
+                  <Button
+                    intent="primary"
+                    icon={isSaving ? "lock" : "saved"}
+                    className="SaveButton"
+                    onClick={() => handleSave()}
+                    disabled={status === null}
+                  >
+                    {isSaving ? "Saving..." : "Save"}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  icon="lock"
+                  className="EditButton"
+                  onClick={() => setLocked(false)}
+                >
+                  Unlock
+                </Button>
+              )}
+            </ControlGroup>
+          </>
+        ) : (
+          <Button
+            intent="primary"
+            className="NewCandidateButton"
+            icon="refresh"
+            onClick={handleGetNewCandidate}
+          >
+            New Candidate
+          </Button>
+        )}
+      </div>
     </>
   );
 };
