@@ -1,10 +1,18 @@
-import { useState, useEffect, ChangeEvent } from "react";
+import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  Button,
+  TextArea,
+  ControlGroup,
+  RadioGroup,
+  Radio,
+  Spinner,
+} from "@blueprintjs/core";
+
 import CandidateInfo from "../components/CandidateInfo/CandidateInfo";
 import { ICandidateInfo } from "../components/CandidateInfo/Types";
-import { Button, TextArea, ControlGroup, Spinner } from "@blueprintjs/core";
 
-import { digestMessage } from "../utils";
+import { digestMessage, getRandomInt } from "../utils";
 import "./info.css";
 
 const Info = (): JSX.Element => {
@@ -13,7 +21,7 @@ const Info = (): JSX.Element => {
   const [isSaving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ICandidateInfo | null>(null);
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | undefined>();
   const [comment, setComment] = useState("");
   const { id } = useParams();
   const navigate = useNavigate();
@@ -40,7 +48,7 @@ const Info = (): JSX.Element => {
   const resetUI = () => {
     setLocked(false);
     setComment("");
-    setStatus(null);
+    setStatus(undefined);
     setData(null);
     setError(null);
     setFetching(false);
@@ -52,8 +60,10 @@ const Info = (): JSX.Element => {
       setError("No data to save");
       return;
     }
-    setSaving(true);
 
+    setSaving(true);
+    const timeout = getRandomInt(100, 3500); // Give the illusion of latency
+    console.log(timeout);
     setTimeout(async () => {
       const updatedData = { ...data, status, comment };
       let key = id;
@@ -68,13 +78,18 @@ const Info = (): JSX.Element => {
       setSaving(false);
       setLocked(true);
       navigate(`/info/${key}`, { replace: true });
-    }, 2000);
+    }, timeout);
   };
 
   const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
     if (event.target?.value !== comment) {
       setComment(event.target.value);
     }
+  };
+
+  const handleStatusChange = (event: FormEvent<HTMLInputElement>) => {
+    const value = (event.target as HTMLInputElement)?.value;
+    setStatus(value);
   };
 
   const handleGetNewCandidate = async () => {
@@ -98,7 +113,11 @@ const Info = (): JSX.Element => {
 
   return (
     <>
-      {isFetching && <div className="loading">LOADING...</div>}
+      {isFetching && (
+        <div className="LoadingOverlay">
+          <Spinner />
+        </div>
+      )}
       {!data && !isFetching && !error && (
         <div>Click the button to query a new candidate!</div>
       )}
@@ -107,6 +126,15 @@ const Info = (): JSX.Element => {
       <div className="ReviewControls">
         {data ? (
           <>
+            <RadioGroup
+              inline={true}
+              onChange={handleStatusChange}
+              selectedValue={status}
+              disabled={locked}
+            >
+              <Radio label="Approve" value="Approve" />
+              <Radio label="Decline" value="Decline" />
+            </RadioGroup>
             <TextArea
               placeholder="Leave a comment here, if desired..."
               fill={true}
@@ -116,34 +144,14 @@ const Info = (): JSX.Element => {
             ></TextArea>
             <ControlGroup className="InfoControlGroup">
               <Button
+                disabled={!locked}
+                intent={locked ? "primary" : undefined}
                 className="NewCandidateButton"
                 icon="refresh"
                 onClick={handleGetNewCandidate}
               >
                 New Candidate
               </Button>
-              <fieldset disabled={locked}>
-                <label htmlFor="Approve">
-                  <input
-                    type="radio"
-                    name="status"
-                    value="Approve"
-                    checked={status === "Approve"}
-                    onChange={() => setStatus("Approve")}
-                  />
-                  Approve
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="status"
-                    value="Reject"
-                    checked={status === "Reject"}
-                    onChange={() => setStatus("Reject")}
-                  />
-                  Reject
-                </label>
-              </fieldset>
               {!locked ? (
                 <>
                   <Button
@@ -151,7 +159,7 @@ const Info = (): JSX.Element => {
                     icon={isSaving ? "lock" : "saved"}
                     className="SaveButton"
                     onClick={() => handleSave()}
-                    disabled={status === null}
+                    disabled={!status}
                   >
                     {isSaving ? "Saving..." : "Save"}
                   </Button>
