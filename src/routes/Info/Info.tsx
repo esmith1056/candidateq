@@ -1,86 +1,79 @@
 import { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios, { AxiosResponse } from "axios";
+import { useRecoilState } from "recoil";
 
+import CandidateAtom from "../../recoil/atoms/candidateAtom";
 import {
   Button,
-  TextArea,
   ControlGroup,
-  RadioGroup,
   Radio,
+  RadioGroup,
   Spinner,
+  TextArea,
 } from "@blueprintjs/core";
 
-import CandidateInfo from "../../components/CandidateInfo/CandidateInfo";
-import { ICandidateInfo } from "../../components/CandidateInfo/Types";
-
 import { digestMessage, getRandomInt } from "../../utils";
-import "./info.css";
+import { ICandidateInfo } from "../../components/CandidateInfo/Types";
+import CandidateInfo from "../../components/CandidateInfo/CandidateInfo";
+import candidateInfo from "../../components/CandidateInfo/CandidateInfo";
 
-const Info = (): JSX.Element => {
-  const [locked, setLocked] = useState(false);
-  const [isFetching, setFetching] = useState(false);
-  const [isSaving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<ICandidateInfo | null>(null);
-  const [status, setStatus] = useState<string | undefined>();
+const Info2 = () => {
+  const [candidate, setCandidate] = useRecoilState(CandidateAtom);
   const [comment, setComment] = useState("");
+  const [admission, setAdmission] = useState("");
   const { id } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (id && !data && !error) {
-      setFetching(true);
-      try {
-        const value = localStorage.getItem(id);
-        if (value) {
-          const data = JSON.parse(value);
-          setLocked(true);
-          setStatus(data.status);
-          setComment(data.comment);
-          setData(data);
-        }
-      } catch (e) {
-        setError("Candidate not found");
-      }
-      setFetching(false);
-    }
-  }, [id, data, error]);
-
-  const resetUI = () => {
-    setLocked(false);
-    setComment("");
-    setStatus(undefined);
-    setData(null);
-    setError(null);
-    setFetching(false);
-    navigate("/info", { replace: true });
-  };
-
-  const handleSave = () => {
-    if (!data) {
-      setError("No data to save");
+    if (!id) {
       return;
     }
 
-    setSaving(true);
-    const timeout = getRandomInt(100, 3500); // Give the illusion of latency
-    console.log(timeout);
-    setTimeout(async () => {
-      const updatedData = { ...data, status, comment };
-      let key = id;
-      if (!key) {
-        const hash = await digestMessage(
-          `${data.name?.last}${data.name?.first}${data.dob?.date}`
-        );
-        key = hash.substring(0, 20);
+    setCandidate({ status: "pending" });
+
+    try {
+      const value = localStorage.getItem(id);
+      if (value) {
+        const data = JSON.parse(value);
+        setCandidate({ data, status: "idle", locked: true });
+        setAdmission(data.admission);
+        setComment(data.comment);
       }
-      localStorage.setItem(key, JSON.stringify(updatedData));
-      setData(updatedData);
-      setSaving(false);
-      setLocked(true);
-      navigate(`/info/${key}`, { replace: true });
-    }, timeout);
+    } catch (e) {
+      setCandidate({ status: "idle", error: "Item not found" });
+    }
+  }, [id]);
+
+  const handleGetNewCandidate = async () => {
+    navigate(`/info`, { replace: true });
+    setCandidate({ status: "pending" });
+    setComment("");
+    setAdmission("");
+
+    axios
+      .get("https://randomuser.me/api/", {
+        params: {
+          exc: "login",
+        },
+      })
+      .then((response: AxiosResponse) => {
+        setCandidate({
+          status: "idle",
+          data: response.data.results[0],
+        });
+      })
+      .catch((e) =>
+        setCandidate({
+          status: "idle",
+          error: e.message,
+        })
+      );
+  };
+
+  const handleAdmissionChange = (event: FormEvent<HTMLInputElement>) => {
+    const value = (event.target as HTMLInputElement)?.value;
+    setAdmission(value);
   };
 
   const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
@@ -89,47 +82,65 @@ const Info = (): JSX.Element => {
     }
   };
 
-  const handleStatusChange = (event: FormEvent<HTMLInputElement>) => {
-    const value = (event.target as HTMLInputElement)?.value;
-    setStatus(value);
+  const handleSave = () => {
+    setCandidate({ ...candidate, status: "pending" });
+
+    if (!candidate.data) {
+      setCandidate({
+        ...candidate,
+        status: "idle",
+        error: "No data to save!",
+      });
+      return;
+    }
+
+    setTimeout(async () => {
+      const updatedData = {
+        ...candidate.data,
+        admission,
+        comment,
+      } as ICandidateInfo;
+
+      let key = id;
+      if (!key) {
+        console.log("make new hash");
+        const hash = await digestMessage(
+          `${updatedData.name?.last}${updatedData.name?.first}${updatedData.dob?.date}`
+        );
+        key = hash.substring(0, 20);
+      }
+
+      localStorage.setItem(key, JSON.stringify(updatedData));
+      setCandidate({
+        data: updatedData,
+        status: "idle",
+        locked: true,
+      });
+
+      navigate(`/info/${key}`, { replace: true });
+    }, getRandomInt(100, 3500));
   };
 
-  const handleGetNewCandidate = async () => {
-    resetUI();
-    setFetching(true);
-    axios
-      .get("https://randomuser.me/api/", {
-        params: {
-          exc: "login",
-        },
-      })
-      .then((response: AxiosResponse) => {
-        setData(response.data.results[0]);
-      })
-      .catch((e) => setError(e.message))
-      .then(() => setFetching(false));
-  };
+  const handleUnlock = () => setCandidate({ ...candidate, locked: false });
 
   return (
     <>
-      {isFetching && (
+      {console.log(candidate)}
+      {candidate.status === "pending" && (
         <div className="LoadingOverlay">
           <Spinner />
         </div>
       )}
-      {!data && !isFetching && !error && (
-        <div>Click the button to query a new candidate!</div>
-      )}
-      {data && !isFetching && <CandidateInfo data={data} />}
-      {error && !isFetching && <div className="error">Error: {error}</div>}
+      {candidate.error && <div className="Error">Error: {candidate.error}</div>}
+      {candidate.data && <CandidateInfo data={candidate.data} />}
       <div className="ReviewControls">
-        {data ? (
+        {candidate.data ? (
           <>
             <RadioGroup
               inline={true}
-              onChange={handleStatusChange}
-              selectedValue={status}
-              disabled={locked}
+              onChange={handleAdmissionChange}
+              selectedValue={admission}
+              disabled={candidate.locked}
             >
               <Radio label="Approve" value="Approve" />
               <Radio label="Decline" value="Decline" />
@@ -139,35 +150,36 @@ const Info = (): JSX.Element => {
               fill={true}
               onChange={handleCommentChange}
               value={comment}
-              disabled={locked}
+              disabled={candidate.locked}
             ></TextArea>
             <ControlGroup className="InfoControlGroup">
               <Button
-                disabled={!locked}
-                intent={locked ? "primary" : undefined}
+                intent={candidate.locked ? "primary" : undefined}
                 className="NewCandidateButton"
                 icon="refresh"
                 onClick={handleGetNewCandidate}
               >
                 New Candidate
               </Button>
-              {!locked ? (
+              {!candidate.locked ? (
                 <>
                   <Button
                     intent="primary"
-                    icon={isSaving ? "lock" : "saved"}
+                    icon={candidate.locked ? "lock" : "saved"}
                     className="SaveButton"
-                    onClick={() => handleSave()}
-                    disabled={!status}
+                    onClick={handleSave}
+                    disabled={!admission}
                   >
-                    {isSaving ? "Saving..." : "Save"}
+                    {candidate.status === "pending" && candidate.data
+                      ? "Saving..."
+                      : "Save"}
                   </Button>
                 </>
               ) : (
                 <Button
                   icon="lock"
                   className="EditButton"
-                  onClick={() => setLocked(false)}
+                  onClick={handleUnlock}
                 >
                   Unlock
                 </Button>
@@ -185,8 +197,11 @@ const Info = (): JSX.Element => {
           </Button>
         )}
       </div>
+      <br />
+      <br />
+      <br />
     </>
   );
 };
 
-export default Info;
+export default Info2;
