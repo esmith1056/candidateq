@@ -37,4 +37,6 @@ export interface ICandidateInfo {
     value?: string;
   };
   gender: string;
+  admission?: string;
+  comment?: string;
 }

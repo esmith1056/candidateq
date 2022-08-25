@@ -4,6 +4,8 @@ import { ICandidateInfo } from "../../components/CandidateInfo/Types";
 interface ICandidateAtom {
   status: "pending" | "saving" | "idle";
   data?: ICandidateInfo;
+  admission?: string;
+  comment?: string;
   error?: string;
   locked?: boolean;
 }

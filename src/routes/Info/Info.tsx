@@ -1,4 +1,4 @@
-import { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios, { AxiosResponse } from "axios";
 import { useRecoilState } from "recoil";
@@ -10,23 +10,22 @@ import {
   Radio,
   RadioGroup,
   Spinner,
-  TextArea,
 } from "@blueprintjs/core";
 
 import { digestMessage, getRandomInt } from "../../utils";
 import { ICandidateInfo } from "../../components/CandidateInfo/Types";
 import CandidateInfo from "../../components/CandidateInfo/CandidateInfo";
-import candidateInfo from "../../components/CandidateInfo/CandidateInfo";
+import CommentBox from "../../components/CommentBox/CommentBox";
 
 const Info2 = () => {
   const [candidate, setCandidate] = useRecoilState(CandidateAtom);
   const [comment, setComment] = useState("");
-  const [admission, setAdmission] = useState("");
   const { id } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!id) {
+      setCandidate({ status: "idle" });
       return;
     }
 
@@ -37,7 +36,6 @@ const Info2 = () => {
       if (value) {
         const data = JSON.parse(value);
         setCandidate({ data, status: "idle", locked: true });
-        setAdmission(data.admission);
         setComment(data.comment);
       }
     } catch (e) {
@@ -49,7 +47,6 @@ const Info2 = () => {
     navigate(`/info`, { replace: true });
     setCandidate({ status: "pending" });
     setComment("");
-    setAdmission("");
 
     axios
       .get("https://randomuser.me/api/", {
@@ -73,13 +70,10 @@ const Info2 = () => {
 
   const handleAdmissionChange = (event: FormEvent<HTMLInputElement>) => {
     const value = (event.target as HTMLInputElement)?.value;
-    setAdmission(value);
-  };
-
-  const handleCommentChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
-    if (event.target?.value !== comment) {
-      setComment(event.target.value);
-    }
+    setCandidate({
+      ...candidate,
+      data: { ...candidate.data, admission: value } as ICandidateInfo,
+    });
   };
 
   const handleSave = () => {
@@ -95,24 +89,24 @@ const Info2 = () => {
     }
 
     setTimeout(async () => {
-      const updatedData = {
-        ...candidate.data,
-        admission,
-        comment,
-      } as ICandidateInfo;
-
       let key = id;
       if (!key) {
         console.log("make new hash");
         const hash = await digestMessage(
-          `${updatedData.name?.last}${updatedData.name?.first}${updatedData.dob?.date}`
+          `${candidate.data?.name?.last}${candidate.data?.name?.first}${candidate.data?.dob?.date}`
         );
         key = hash.substring(0, 20);
       }
 
-      localStorage.setItem(key, JSON.stringify(updatedData));
+      const update = {
+        ...candidate.data,
+        comment,
+      } as ICandidateInfo;
+
+      localStorage.setItem(key, JSON.stringify(update));
       setCandidate({
-        data: updatedData,
+        ...candidate,
+        data: update,
         status: "idle",
         locked: true,
       });
@@ -125,7 +119,6 @@ const Info2 = () => {
 
   return (
     <>
-      {console.log(candidate)}
       {candidate.status === "pending" && (
         <div className="LoadingOverlay">
           <Spinner />
@@ -139,19 +132,17 @@ const Info2 = () => {
             <RadioGroup
               inline={true}
               onChange={handleAdmissionChange}
-              selectedValue={admission}
+              selectedValue={candidate.data?.admission}
               disabled={candidate.locked}
             >
               <Radio label="Approve" value="Approve" />
               <Radio label="Decline" value="Decline" />
             </RadioGroup>
-            <TextArea
-              placeholder="Leave a comment here, if desired..."
-              fill={true}
-              onChange={handleCommentChange}
-              value={comment}
+            <CommentBox
+              state={[comment, setComment]}
+              placeholderText="Leave a comment here, if desired..."
               disabled={candidate.locked}
-            ></TextArea>
+            />
             <ControlGroup className="InfoControlGroup">
               <Button
                 intent={candidate.locked ? "primary" : undefined}
@@ -168,7 +159,7 @@ const Info2 = () => {
                     icon={candidate.locked ? "lock" : "saved"}
                     className="SaveButton"
                     onClick={handleSave}
-                    disabled={!admission}
+                    disabled={!candidate.data?.admission}
                   >
                     {candidate.status === "pending" && candidate.data
                       ? "Saving..."
@@ -197,9 +188,6 @@ const Info2 = () => {
           </Button>
         )}
       </div>
-      <br />
-      <br />
-      <br />
     </>
   );
 };
