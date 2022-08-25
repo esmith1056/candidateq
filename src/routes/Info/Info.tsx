@@ -2,22 +2,25 @@ import { useState, useEffect, FormEvent } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios, { AxiosResponse } from "axios";
 import { useRecoilState } from "recoil";
+import { PeopleAlt, Save, Lock } from "@mui/icons-material";
 
 import CandidateAtom from "../../recoil/atoms/candidateAtom";
+
 import {
   Button,
-  ControlGroup,
-  Radio,
+  ButtonGroup,
   RadioGroup,
-  Spinner,
-} from "@blueprintjs/core";
+  Radio,
+  FormControlLabel,
+  Card,
+} from "@mui/material";
 
 import { digestMessage, getRandomInt } from "../../utils";
 import { ICandidateInfo } from "../../components/CandidateInfo/Types";
 import CandidateInfo from "../../components/CandidateInfo/CandidateInfo";
 import CommentBox from "../../components/CommentBox/CommentBox";
 
-const Info2 = () => {
+const Info = () => {
   const [candidate, setCandidate] = useRecoilState(CandidateAtom);
   const [comment, setComment] = useState("");
   const { id } = useParams();
@@ -91,11 +94,10 @@ const Info2 = () => {
     setTimeout(async () => {
       let key = id;
       if (!key) {
-        console.log("make new hash");
         const hash = await digestMessage(
           `${candidate.data?.name?.last}${candidate.data?.name?.first}${candidate.data?.dob?.date}`
         );
-        key = hash.substring(0, 20);
+        key = `uid.${hash.substring(0, 20)}`;
       }
 
       const update = {
@@ -120,9 +122,7 @@ const Info2 = () => {
   return (
     <>
       {candidate.status === "pending" && (
-        <div className="LoadingOverlay">
-          <Spinner />
-        </div>
+        <div className="LoadingOverlay">Loading...</div>
       )}
       {candidate.error && <div className="Error">Error: {candidate.error}</div>}
       {candidate.data && <CandidateInfo data={candidate.data} />}
@@ -130,36 +130,48 @@ const Info2 = () => {
         {candidate.data ? (
           <>
             <RadioGroup
-              inline={true}
               onChange={handleAdmissionChange}
-              selectedValue={candidate.data?.admission}
-              disabled={candidate.locked}
+              value={candidate.data?.admission}
+              row
             >
-              <Radio label="Approve" value="Approve" />
-              <Radio label="Decline" value="Decline" />
+              <FormControlLabel
+                control={<Radio />}
+                label={"Approve"}
+                value="Approve"
+                disabled={candidate.locked}
+              />
+              <FormControlLabel
+                control={<Radio />}
+                label={"Decline"}
+                value="Decline"
+                disabled={candidate.locked}
+              />
             </RadioGroup>
             <CommentBox
               state={[comment, setComment]}
               placeholderText="Leave a comment here, if desired..."
               disabled={candidate.locked}
             />
-            <ControlGroup className="InfoControlGroup">
+            <ButtonGroup className="InfoControlGroup">
               <Button
-                intent={candidate.locked ? "primary" : undefined}
+                variant={"outlined"}
                 className="NewCandidateButton"
-                icon="refresh"
                 onClick={handleGetNewCandidate}
+                endIcon={<PeopleAlt />}
               >
                 New Candidate
               </Button>
               {!candidate.locked ? (
                 <>
                   <Button
-                    intent="primary"
-                    icon={candidate.locked ? "lock" : "saved"}
+                    variant="contained"
                     className="SaveButton"
                     onClick={handleSave}
-                    disabled={!candidate.data?.admission}
+                    disabled={
+                      candidate.status === "pending" ||
+                      !candidate.data?.admission
+                    }
+                    endIcon={<Save />}
                   >
                     {candidate.status === "pending" && candidate.data
                       ? "Saving..."
@@ -168,21 +180,22 @@ const Info2 = () => {
                 </>
               ) : (
                 <Button
-                  icon="lock"
+                  variant={"contained"}
                   className="EditButton"
                   onClick={handleUnlock}
+                  endIcon={<Lock />}
                 >
                   Unlock
                 </Button>
               )}
-            </ControlGroup>
+            </ButtonGroup>
           </>
         ) : (
           <Button
-            intent="primary"
+            variant={"contained"}
             className="NewCandidateButton"
-            icon="refresh"
             onClick={handleGetNewCandidate}
+            endIcon={<PeopleAlt />}
           >
             New Candidate
           </Button>
@@ -192,4 +205,4 @@ const Info2 = () => {
   );
 };
 
-export default Info2;
+export default Info;

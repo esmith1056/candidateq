@@ -1,18 +1,29 @@
-import { Link } from "react-router-dom";
-import { Classes, Navbar, Button, NavbarGroup } from "@blueprintjs/core";
+import { useNavigate } from "react-router-dom";
+import {
+  Box,
+  AppBar,
+  IconButton,
+  Typography,
+  Button,
+  Toolbar,
+} from "@mui/material";
 
 const MainMenu = (): JSX.Element => {
+  const navigate = useNavigate();
+
   return (
-    <Navbar className="MainMenu">
-      <NavbarGroup>
-        <Link className="bp4-button bp4-minimal bp4-icon-home" to="/info">
-          Candidate Info
-        </Link>
-        <Link className="bp4-button bp4-minimal bp4-icon-people" to="/list">
-          List of Previous Candidates
-        </Link>
-      </NavbarGroup>
-    </Navbar>
+    <Box sx={{ flexGrow: 1 }}>
+      <AppBar position="static">
+        <Toolbar>
+          <Button color="inherit" onClick={() => navigate("/info")}>
+            Home
+          </Button>
+          <Button color="inherit" onClick={() => navigate("/list")}>
+            Candidates
+          </Button>
+        </Toolbar>
+      </AppBar>
+    </Box>
   );
 };
 
