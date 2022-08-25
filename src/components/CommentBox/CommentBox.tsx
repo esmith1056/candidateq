@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction, ChangeEvent } from "react";
 
-import { TextArea } from "@blueprintjs/core";
+import { TextField } from "@mui/material";
 
 type TProps = {
   state: [comment: string, setComment: Dispatch<SetStateAction<string>>];
@@ -15,19 +15,20 @@ const CommentBox = ({
 }: TProps): JSX.Element => {
   const [comment, setComment] = state;
 
-  const handleChange = (event: ChangeEvent<HTMLTextAreaElement>) => {
+  const handleChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target?.value !== comment) {
       setComment(event.target.value);
     }
   };
+
   return (
-    <TextArea
+    <TextField
       placeholder={placeholderText}
-      fill={true}
       onChange={handleChange}
+      multiline={true}
       value={comment}
       disabled={disabled}
-    ></TextArea>
+    ></TextField>
   );
 };
 

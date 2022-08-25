@@ -6,12 +6,13 @@ type TReducerReturn = [string, string][];
 const List = () => {
   const [candidates] = useState(() =>
     Object.keys(localStorage).reduce<TReducerReturn>((acc, cur) => {
-      const json = localStorage.getItem(cur);
-
-      if (json) {
-        const data = JSON.parse(json);
-        const name = `${data.name?.last}, ${data.name?.first}`;
-        return [...acc, [cur, name]];
+      if (cur.startsWith("uid.")) {
+        const entry = localStorage.getItem(cur);
+        if (entry) {
+          const data = JSON.parse(entry);
+          const name = `${data.name?.last}, ${data.name?.first}`;
+          return [...acc, [cur, name]];
+        }
       }
 
       return [...acc];
